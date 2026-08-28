@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure URL Shortener</title>
+    <title>Compact URL Shortener</title>
     <meta name="robots" content="noindex, nofollow, noarchive">
+    
+    <!-- Load LZ-String library for real compression -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     
     <style>
         body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; background: #f4f4f9; user-select: none; }
@@ -19,9 +22,9 @@
 </head>
 <body oncontextmenu="return false;">
 
-    <div class="box" id="mainBox">
-        <h2>Secure URL Shortener</h2>
-        <p>Enter your long URL below to generate a shareable link:</p>
+    <div class="box">
+        <h2>Compact URL Shortener</h2>
+        <p>Enter your long URL below to generate a compressed link:</p>
         
         <input type="url" id="longUrl" placeholder="https://example.com/very/long/path" required>
         <br>
@@ -40,26 +43,25 @@
             }
         });
 
-        // 2. DevTools Detector (Wipes page if inspector opens)
-        function checkDevTools() {
-            const widthThreshold = window.outerWidth - window.innerWidth > 160;
-            const heightThreshold = window.outerHeight - window.innerHeight > 160;
-            
-            if (widthThreshold || heightThreshold) {
-                document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh;'>Access Blocked: Inspector Detected.</h1>";
+        // 2. DevTools Detector Trap
+        setInterval(function() {
+            if (window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160) {
+                document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh;'>Access Blocked.</h1>";
                 window.location.href = "about:blank";
             }
-        }
-        setInterval(checkDevTools, 500);
+        }, 500);
 
-        // 3. Redirect logic for short links
+        // 3. Instant Redirect logic for compressed short links
         window.onload = function() {
             const hash = window.location.hash.substring(1);
             if (hash) {
                 try {
-                    const decodedUrl = atob(hash);
-                    if (decodedUrl.startsWith('http://') || decodedUrl.startsWith('https://')) {
+                    // Decompress the compressed string back into the long URL
+                    const decodedUrl = LZString.decompressFromEncodedURIComponent(hash);
+                    if (decodedUrl && (decodedUrl.startsWith('http://') || decodedUrl.startsWith('https://'))) {
                         window.location.replace(decodedUrl);
+                    } else {
+                        document.getElementById('result').innerHTML = "<p style='color:red;'>Invalid short link!</p>";
                     }
                 } catch (e) {
                     document.getElementById('result').innerHTML = "<p style='color:red;'>Invalid short link!</p>";
@@ -67,19 +69,21 @@
             }
         };
 
-        // 4. Short link generator
+        // 4. Generate compressed short link
         function generateShortLink() {
-            const urlInput = document.getElementById('longUrl').value.trim();
+            const urlInput = document.getElementById('longUrl'].value.trim();
             if (!urlInput) {
                 alert("Please enter a valid URL");
                 return;
             }
-            const encoded = btoa(urlInput);
+            
+            // Compress URL using LZString to make it significantly shorter than Base64
+            const compressed = LZString.compressToEncodedURIComponent(urlInput);
             const baseDomain = window.location.origin + window.location.pathname;
-            const shortLink = `${baseDomain}#${encoded}`;
+            const shortLink = `${baseDomain}#${compressed}`;
 
             document.getElementById('result').innerHTML = `
-                <p>Your Short Link:</p>
+                <p>Your Compressed Short Link:</p>
                 <input type="text" value="${shortLink}" readonly style="width: 90%; padding: 8px; text-align: center;" onclick="this.select();">
                 <br><br>
                 <a href="${shortLink}" target="_blank">Test Link</a>
