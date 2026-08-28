@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instant URL Shortener</title>
-    <!-- Prevent Search Engines from Indexing -->
+    <title>Secure URL Shortener</title>
     <meta name="robots" content="noindex, nofollow, noarchive">
     
     <style>
@@ -20,11 +19,10 @@
 </head>
 <body oncontextmenu="return false;">
 
-    <div class="box">
+    <div class="box" id="mainBox">
         <h2>Secure URL Shortener</h2>
         <p>Enter your long URL below to generate a shareable link:</p>
         
-        <!-- Input Form -->
         <input type="url" id="longUrl" placeholder="https://example.com/very/long/path" required>
         <br>
         <button onclick="generateShortLink()">Generate Short Link</button>
@@ -33,38 +31,35 @@
     </div>
 
     <script>
-        // 1. Disable Right-Click and Common Inspect Shortcuts
-        document.addEventListener('contextmenu', event => event.preventDefault());
-        
-        document.addEventListener('keydown', function(event) {
-            // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
-            if (
-                event.key === 'F12' || 
-                (event.ctrlKey && event.shiftKey && (event.key === 'I' || event.key === 'J' || event.key === 'C')) || 
-                (event.ctrlKey && event.key === 'U')
-            ) {
-                event.preventDefault();
-                alert("Inspection is disabled on this page.");
+        // 1. Disable Right-Click and Shortcuts
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) || (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault();
                 return false;
             }
         });
 
-        // 2. Blank/Spam the console to discourage tampering
-        setInterval(function() {
-            console.clear();
-            console.log("%cStop!", "color: red; font-size: 40px; font-weight: bold;");
-            console.log("%cThis is a browser feature intended for developers.", "font-size: 16px;");
-        }, 1000);
+        // 2. DevTools Detector (Wipes page if inspector opens)
+        function checkDevTools() {
+            const widthThreshold = window.outerWidth - window.innerWidth > 160;
+            const heightThreshold = window.outerHeight - window.innerHeight > 160;
+            
+            if (widthThreshold || heightThreshold) {
+                document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh;'>Access Blocked: Inspector Detected.</h1>";
+                window.location.href = "about:blank";
+            }
+        }
+        setInterval(checkDevTools, 500);
 
-        // 3. Check if the page was opened via a short link (Redirect logic)
+        // 3. Redirect logic for short links
         window.onload = function() {
-            const hash = window.location.hash.substring(1); // Get everything after '#'
+            const hash = window.location.hash.substring(1);
             if (hash) {
                 try {
-                    // Decode the Base64 long URL
                     const decodedUrl = atob(hash);
                     if (decodedUrl.startsWith('http://') || decodedUrl.startsWith('https://')) {
-                        window.location.replace(decodedUrl); // Instant redirect
+                        window.location.replace(decodedUrl);
                     }
                 } catch (e) {
                     document.getElementById('result').innerHTML = "<p style='color:red;'>Invalid short link!</p>";
@@ -72,22 +67,17 @@
             }
         };
 
-        // 4. Generate short link logic
+        // 4. Short link generator
         function generateShortLink() {
             const urlInput = document.getElementById('longUrl').value.trim();
             if (!urlInput) {
                 alert("Please enter a valid URL");
                 return;
             }
-
-            // Encode URL to Base64 so it fits cleanly into a hash fragment
             const encoded = btoa(urlInput);
-            
-            // Construct the short URL using current GitHub Pages domain
             const baseDomain = window.location.origin + window.location.pathname;
             const shortLink = `${baseDomain}#${encoded}`;
 
-            // Display the result
             document.getElementById('result').innerHTML = `
                 <p>Your Short Link:</p>
                 <input type="text" value="${shortLink}" readonly style="width: 90%; padding: 8px; text-align: center;" onclick="this.select();">
