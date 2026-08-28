@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bohrs Instant URL Shortener</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; background: #f4f4f9; }
+        .box { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input[type="url"] { width: 80%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; }
+        button { padding: 12px 20px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #result { margin-top: 20px; word-break: break-all; }
+        #result a { color: #007bff; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>No-API URL Shortener</h2>
+        <p>Enter your long URL below to generate a shareable link:</p>
+        
+        <!-- Input Form -->
+        <input type="url" id="longUrl" placeholder="https://example.com/very/long/path" required>
+        <br>
+        <button onclick="generateShortLink()">Generate Short Link</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // 1. Check if the page was opened via a short link (Redirect logic)
+        window.onload = function() {
+            const hash = window.location.hash.substring(1); // Get everything after '#'
+            if (hash) {
+                try {
+                    // Decode the Base64 long URL
+                    const decodedUrl = atob(hash);
+                    if (decodedUrl.startsWith('http://') || decodedUrl.startsWith('https://')) {
+                        window.location.replace(decodedUrl); // Instant redirect
+                    }
+                } catch (e) {
+                    document.getElementById('result').innerHTML = "<p style='color:red;'>Invalid short link!</p>";
+                }
+            }
+        };
+
+        // 2. Generate short link logic
+        function generateShortLink() {
+            const urlInput = document.getElementById('longUrl').value.trim();
+            if (!urlInput) {
+                alert("Please enter a valid URL");
+                return;
+            }
+
+            // Encode URL to Base64 so it fits cleanly into a hash fragment
+            const encoded = btoa(urlInput);
+            
+            // Construct the short URL using current GitHub Pages domain
+            const baseDomain = window.location.origin + window.location.pathname;
+            const shortLink = `${baseDomain}#${encoded}`;
+
+            // Display the result
+            document.getElementById('result').innerHTML = `
+                <p>Your Short Link:</p>
+                <input type="text" value="${shortLink}" readonly style="width: 90%; padding: 8px; text-align: center;" onclick="this.select();">
+                <br><br>
+                <a href="${shortLink}" target="_blank">Test Link</a>
+            `;
+        }
+    </script>
+</body>
+</html>
