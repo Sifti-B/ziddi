@@ -6,9 +6,6 @@
     <title>Secure URL Shortener</title>
     <meta name="robots" content="noindex, nofollow, noarchive">
     
-    <!-- Load LZ-String library for compression -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
-    
     <style>
         body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; background: #f4f4f9; user-select: none; }
         .box { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -24,18 +21,18 @@
 
     <div class="box">
         <h2>Secure URL Shortener</h2>
-        <p>Enter your long URL below to generate a compact link:</p>
+        <p>Enter your long URL below to generate your link:</p>
         
         <input type="url" id="longUrl" placeholder="https://example.com/very/long/path" required>
         <br>
-        <button onclick="generateShortLink()">Generate Short Link</button>
+        <button type="button" onclick="generateShortLink()">Generate Short Link</button>
 
         <div id="result"></div>
     </div>
 
     <script>
         // 1. Disable Right-Click and Shortcuts
-        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
         document.addEventListener('keydown', function(e) {
             if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) || (e.ctrlKey && e.key === 'U')) {
                 e.preventDefault();
@@ -56,7 +53,7 @@
             const hash = window.location.hash.substring(1);
             if (hash) {
                 try {
-                    const decodedUrl = LZString.decompressFromEncodedURIComponent(hash);
+                    const decodedUrl = decodeURIComponent(atob(hash));
                     if (decodedUrl && (decodedUrl.startsWith('http://') || decodedUrl.startsWith('https://'))) {
                         window.location.replace(decodedUrl);
                     } else {
@@ -68,7 +65,7 @@
             }
         };
 
-        // 4. Generate compressed short link
+        // 4. Generate Short Link Function
         function generateShortLink() {
             const urlInput = document.getElementById('longUrl').value.trim();
             if (!urlInput) {
@@ -76,10 +73,10 @@
                 return;
             }
             
-            // Compress URL securely
-            const compressed = LZString.compressToEncodedURIComponent(urlInput);
+            // Safe encoding using standard built-in functions
+            const encoded = btoa(encodeURIComponent(urlInput));
             const baseDomain = window.location.origin + window.location.pathname;
-            const shortLink = `${baseDomain}#${compressed}`;
+            const shortLink = `${baseDomain}#${encoded}`;
 
             document.getElementById('result').innerHTML = `
                 <p>Your Short Link:</p>
