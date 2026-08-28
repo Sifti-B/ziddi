@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure URL Shortener</title>
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; background: #f4f4f9; user-select: none; }
+        .box { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input[type="url"] { width: 80%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; user-select: text; }
+        button { padding: 12px 20px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #result { margin-top: 20px; word-break: break-all; }
+        #result input { user-select: text; }
+        #result a { color: #007bff; font-weight: bold; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="box">
+        <h2>Secure API URL Shortener</h2>
+        <p>Enter your long URL to generate a short link:</p>
+        
+        <input type="url" id="longUrl" placeholder="https://example.com/very/long/path" required>
+        <br>
+        <button type="button" onclick="generateShortLink()">Generate Short Link</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // 1. Disable Right-Click and Shortcuts
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) || (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // 2. DevTools Trap
+        setInterval(function() {
+            if (window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160) {
+                document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20vh;'>Access Blocked.</h1>";
+                window.location.href = "about:blank";
+            }
+        }, 500);
+
+        // 3. Generate Short Link via Free API (is.gd)
+        async function generateShortLink() {
+            const urlInput = document.getElementById('longUrl').value.trim();
+            if (!urlInput) {
+                alert("Please enter a valid URL");
+                return;
+            }
+
+            document.getElementById('result').innerHTML = "<p>Generating short link...</p>";
+
+            try {
+                // Using is.gd free public API (No key required)
+                const apiUrl = `https://is.gd/create.php?format=simple&url=${encodeURIComponent(urlInput)}`;
+                
+                const response = await fetch(apiUrl);
+                const shortUrl = await response.text();
+
+                if (shortUrl.startsWith('http')) {
+                    document.getElementById('result').innerHTML = `
+                        <p>Your Short Link:</p>
+                        <input type="text" value="${shortUrl}" readonly style="width: 90%; padding: 8px; text-align: center;" onclick="this.select();">
+                        <br><br>
+                        <a href="${shortUrl}" target="_blank">Test Link</a>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `<p style='color:red;'>Error: ${shortUrl}</p>`;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = "<p style='color:red;'>Failed to connect to shortening service.</p>";
+            }
+        }
+    </script>
+</body>
+</html>
